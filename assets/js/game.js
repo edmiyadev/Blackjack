@@ -1,24 +1,66 @@
 (() => {
   "use strict";
 
+  let numberOfPlayers = 0;
   let deck = [];
-  const types = ["C", "D", "H", "S"];
-  const specials = ["A", "J", "K", "Q"];
-  const uriImageCards = "assets/cards/";
 
-  let playerPointers = 0;
-  let computerPointers = 0;
+  let players = [];
+
+  const types = ["C", "D", "H", "S"],
+    specials = ["A", "J", "K", "Q"],
+    uriImageCards = "assets/cards/";
 
   const btnOrderCard = document.querySelector("#btnOrderCard"),
     btnStopGame = document.querySelector("#btnStopGame"),
     btnNewGame = document.querySelector("#btnNewGame");
 
-  const divPlayerCards = document.querySelector("#player-cards"),
-    divComputerCards = document.querySelector("#computer-cards"),
+  const divCards = document.querySelectorAll(".divCards"),
     playerScores = document.querySelectorAll("small");
 
   // Functions
-  let createDesk = () => {
+
+  // Number of players
+  const numberPlayers = () => {
+    do {
+      numberOfPlayers = prompt("Cantidad de jugadores (de 1 a 3):", 1);
+    } while (!(numberOfPlayers >= 1 && numberOfPlayers <= 3));
+  };
+
+  // Start the game
+  const startGame = (numberOfPlayers = 1) => {
+    deck = createDeck();
+    players = [];
+
+    for (let index = 0; index < numberOfPlayers * 1 + 1; index++) {
+      players.push(0);
+    }
+
+    btnOrderCard.disabled = false;
+    btnStopGame.disabled = false;
+
+    divCards.forEach((value, key) => {
+      divCards[key].innerHTML = "";
+    });
+
+    playerScores.forEach((value, key) => {
+      playerScores[key].innerHTML = 0;
+    });
+  };
+
+  const collectPoints = (card, shift) => {
+    players[shift] = players[shift] + valueCard(card);
+    playerScores[shift].innerText = players[shift];
+    return players[shift];
+  };
+
+  const createCard = (card, player) => {
+    const imgCard = document.createElement("img");
+    imgCard.src = `${uriImageCards}${card}.png`;
+    imgCard.classList = "card";
+    divCards[player].append(imgCard);
+  };
+
+  const createDeck = () => {
     let cards = [];
 
     for (let index = 2; index <= 10; index++) {
@@ -36,48 +78,26 @@
     return _.shuffle(cards);
   };
 
-  let startGame = () => {
-    deck = [];
-    deck = createDesk();
-
-    btnOrderCard.disabled = false;
-    btnStopGame.disabled = false;
-
-    playerPointers = 0;
-    computerPointers = 0;
-
-    divPlayerCards.innerHTML = "";
-    divComputerCards.innerHTML = "";
-
-    playerScores[0].innerHTML = 0;
-    playerScores[1].innerHTML = 0;
-  };
-
-  let orderCard = () =>
-    deck.length === 0
+  const orderCard = () => {
+    return deck.length === 0
       ? (() => {
           throw "there are no cards in the deck";
         })()
       : deck.pop();
+  };
 
-  let valueCard = (card) => {
-    const value = card.substring(0, card.length - 1);
-
+  const valueCard = (card) => {
+    const value = card.slice(0, -1);
     return isNaN(value) ? (value === "A" ? 11 : 10) : value * 1;
   };
 
-  let computerShift = (playerPointers) => {
+  const computerShift = (playerPointers) => {
+    let computerPointers = 0;
+
     do {
       let card = orderCard();
-      computerPointers += valueCard(card);
-
-      playerScores[1].innerText = computerPointers;
-
-      const imgCard = document.createElement("img");
-      console.log(imgCard);
-      imgCard.src = `${uriImageCards}${card}.png`;
-      imgCard.classList = "card";
-      divComputerCards.append(imgCard);
+      computerPointers = collectPoints(card, players.length - 1);
+      createCard(card, players.length - 1);
 
       if (playerPointers > 21) {
         break;
@@ -88,6 +108,8 @@
   };
 
   const whoWon = () => {
+    const [playerPointers, computerPointers] = players;
+
     setTimeout(() => {
       if (playerPointers === computerPointers) {
         alert("DRAW!");
@@ -98,46 +120,29 @@
       } else {
         alert("YOU LOSE");
       }
-    }, 20);
+    }, 30);
   };
 
-  // TODO:CREATE FUNCTIONALITY
-  let showCard = (pointers, playerScore) => {
-    let card = orderCard();
-    pointers += valueCard(card);
-    playerScore.innerText = pointers;
-
-    const imgCard = document.createElement("img");
-    console.log(imgCard);
-    imgCard.src = `${uriImageCards}${card}.png`;
-    imgCard.classList = "card";
-    divPlayerCards.append(imgCard);
-  };
+  numberPlayers();
 
   // Events
   btnOrderCard.addEventListener("click", () => {
     let card = orderCard();
-    playerPointers += valueCard(card);
-
-    playerScores[0].innerText = playerPointers;
-
-    const imgCard = document.createElement("img");
-    console.log(imgCard);
-    imgCard.src = `${uriImageCards}${card}.png`;
-    imgCard.classList = "card";
-    divPlayerCards.append(imgCard);
+    const playerPointers = collectPoints(card, 0);
+    createCard(card, 0);
 
     if (playerPointers > 21) {
-      btnOrderCard.disabled = true;
       computerShift(playerPointers);
+      btnOrderCard.disabled = true;
       btnStopGame.disabled = true;
 
       console.warn("YOU LOSE");
     } else if (playerPointers === 21) {
-      btnOrderCard.disabled = true;
-      console.warn("Uff, 21");
       computerShift(playerPointers);
+      btnOrderCard.disabled = true;
       btnStopGame.disabled = true;
+
+      console.warn("Uff, 21");
     }
   });
 
@@ -145,10 +150,10 @@
     btnOrderCard.disabled = true;
     btnStopGame.disabled = true;
 
-    computerShift(playerPointers);
+    computerShift(players[0]);
   });
 
   btnNewGame.addEventListener("click", () => {
-    startGame();
+    startGame(numberOfPlayers);
   });
 })();
