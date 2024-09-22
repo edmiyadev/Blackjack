@@ -4,9 +4,10 @@ import {
   computerShift,
   collectPoints,
   createCard,
+  numberPlayers,
 } from "./usescases";
 
-let numberOfPlayers = 0;
+let numberOfPlayers = 1;
 let deck = [];
 let players = [];
 
@@ -22,17 +23,9 @@ const btnOrderCard = document.querySelector("#btnOrderCard"),
 export const divCards = document.querySelectorAll(".divCards");
 const playerScores = document.querySelectorAll("small");
 
-// Functions
+export const startGame = () => {
+  // numberOfPlayers = numberPlayers();
 
-// Number of players
-const numberPlayers = () => {
-  do {
-    numberOfPlayers = prompt("Cantidad de jugadores (de 1 a 3):", 1);
-  } while (!(numberOfPlayers >= 1 && numberOfPlayers <= 3));
-};
-
-// Start the game
-const startGame = (numberOfPlayers = 1) => {
   deck = createDeck(types, specials);
   players = [];
 
@@ -51,8 +44,6 @@ const startGame = (numberOfPlayers = 1) => {
     playerScores[key].innerHTML = 0;
   });
 };
-
-numberPlayers();
 
 // Events
 btnOrderCard.addEventListener("click", () => {
@@ -83,5 +74,5 @@ btnStopGame.addEventListener("click", () => {
 });
 
 btnNewGame.addEventListener("click", () => {
-  startGame(numberOfPlayers);
+  startGame();
 });
